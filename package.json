@@ -1,0 +1,19 @@
+{
+  "name": "halfmoon.ws-api",
+  "version": "1.0.0",
+  "description": "https://api.halfmoon.ws",
+  "main": "index.js",
+  "author": "Nima Gardideh <nima@halfmoon.ws>",
+  "scripts": {
+    "start": "nodemon ./index.js"
+  },
+  "engines": {
+    "node": "9.11.2"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.5"
+  }
+}
