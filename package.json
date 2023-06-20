@@ -8,7 +8,7 @@
     "start": "nodemon ./index.js"
   },
   "engines": {
-    "node": "15.5.1"
+    "node": "18.11"
   },
   "dependencies": {
     "axios": "^0.18.0",
