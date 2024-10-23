@@ -64,7 +64,7 @@ app.get('/weather', (req, res) => {
         <div style="display: flex; align-items: top;">
           <img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png" alt="${weather.weather[0].description}" style="width: 100px; height: 100px;">
           </div>
-        <div style="font-size: 0.8em; text-align: center; margin-top: -15px">
+        <div style="font-size: 0.8em; text-align: center; margin-top: -25px">
           <p>
             <span style="font-size: 1.1em;">${Number(weather.main.temp / 10.0).toFixed(2)}°C</span><br/>
             <em>${weather.weather[0].description}</em>
