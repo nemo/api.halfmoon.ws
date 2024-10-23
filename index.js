@@ -12,6 +12,10 @@ const openWeatherMap = new OpenWeatherMap({
   APPID: config.openWeatherMap.apiKey
 });
 
+// Add this near the top of the file, after other const declarations
+const weatherCache = {};
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 function ensurePublicAPI(req, res, next) {
   res.header("Access-Control-Allow-Origin", '*');
   res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authorization, Cookie");
@@ -49,8 +53,6 @@ app.get('/login', (req, res) => {
   );
 
 });
-
-let cache = {};
 
 app.get('/weather', (req, res) => {
   const defaultIP = '184.152.78.14'; // An IP address in New York
@@ -103,6 +105,15 @@ app.get('/weather', (req, res) => {
     });
   }
 
+  // Check if we have cached data for this IP
+  if (weatherCache[ip] && (Date.now() - weatherCache[ip].timestamp) < CACHE_DURATION) {
+    return res.json({
+      status: 'ok',
+      data: weatherCache[ip].data,
+      cached: true
+    });
+  }
+
   new Promise((resolve, reject) => {
     openWeatherMap.getCurrentWeatherByGeoCoordinates(geo.ll[0], geo.ll[1], (err, weather) => {
       if (err) {
@@ -113,21 +124,30 @@ app.get('/weather', (req, res) => {
     });
   })
   .then(weather => {
+    const responseData = {
+      location: {
+        city: geo.city,
+        country: geo.country
+      },
+      weather: {
+        description: weather.weather[0].description,
+        temperature: weather.main.temp,
+        humidity: weather.main.humidity,
+        windSpeed: weather.wind.speed
+      },
+      embed: generateWeatherWidget(weather, geo)
+    };
+
+    // Cache the weather data
+    weatherCache[ip] = {
+      timestamp: Date.now(),
+      data: responseData
+    };
+
     res.json({
       status: 'ok',
-      data: {
-        location: {
-          city: geo.city,
-          country: geo.country
-        },
-        weather: {
-          description: weather.weather[0].description,
-          temperature: weather.main.temp,
-          humidity: weather.main.humidity,
-          windSpeed: weather.wind.speed
-        },
-        embed: generateWeatherWidget(weather, geo)
-      }
+      data: responseData,
+      cached: false
     });
   })
   .catch(err => {
