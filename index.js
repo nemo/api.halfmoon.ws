@@ -90,6 +90,9 @@ app.get('/weather', (req, res) => {
 
   // Check if we have cached data for this IP
   if (weatherCache[ip] && (Date.now() - weatherCache[ip].timestamp) < CACHE_DURATION) {
+    if (req.query.iframe) {
+      return res.send(`<html><body>${weatherCache[ip].data.embed}</body></html>`);
+    }
     return res.json({
       status: 'ok',
       data: weatherCache[ip].data,
@@ -127,11 +130,15 @@ app.get('/weather', (req, res) => {
       data: responseData
     };
 
-    res.json({
-      status: 'ok',
-      data: responseData,
-      cached: false
-    });
+    if (req.query.iframe) {
+      res.send(`<html><body>${responseData.embed}</body></html>`)
+    } else {
+      res.json({
+        status: 'ok',
+        data: responseData,
+        cached: false
+      });
+    }
   })
   .catch(err => {
     console.error(err);
