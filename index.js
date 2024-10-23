@@ -60,7 +60,7 @@ app.get('/weather', (req, res) => {
   
   const generateWeatherWidget = (weather, location) => {
     return `
-      <div class="w-richtext" style="font-family: inherit; max-width: 100px; padding: 0; color: inherit;">
+      <div class="w-richtext" style="font-family: inherit; display: flex; flex-direction: column; max-width: 100px; padding: 0; color: inherit;">
         <div style="display: flex; align-items: top;">
           <img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png" alt="${weather.weather[0].description}" style="width: 100px; height: 100px;">
           </div>
