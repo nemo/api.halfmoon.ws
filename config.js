@@ -6,6 +6,9 @@ module.exports = {
       client_secret: process.env.FOURSQUARE_CLIENT_SECRET,
       access_token: process.env.FOURSQUARE_ACCESS_TOKEN,
       callback_url: 'http://localhost:3001/users/auth/foursquare/callback'
+    },
+    openWeatherMap: {
+      apiKey: process.env.OPENWEATHERMAP_APIKEY
     }
   },
   production: {
@@ -15,6 +18,9 @@ module.exports = {
       client_secret: process.env.FOURSQUARE_CLIENT_SECRET,
       access_token: process.env.FOURSQUARE_ACCESS_TOKEN,
       callback_url: 'https://halfmoon.ws/users/auth/foursquare/callback'
+    },
+    openWeatherMap: {
+      apiKey: process.env.OPENWEATHERMAP_APIKEY
     }
   }
 }

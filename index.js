@@ -5,6 +5,12 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const config = require('./config')[process.env.NODE_ENV || 'development'];
 const axios = require('axios');
+const geoip = require('geoip-lite');
+const OpenWeatherMap = require('openweathermap-node');
+// Add this to your config file and replace with your actual API key
+const openWeatherMap = new OpenWeatherMap({
+  APPID: config.openWeatherMap.apiKey
+});
 
 function ensurePublicAPI(req, res, next) {
   res.header("Access-Control-Allow-Origin", '*');
@@ -46,30 +52,117 @@ app.get('/login', (req, res) => {
 
 let cache = {};
 
+app.get('/weather', (req, res) => {
+  const defaultIP = '184.152.78.14'; // An IP address in New York
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const getWeatherIcon = (weatherCode) => {
+    // Map weather codes to icon names (you may need to adjust this based on OpenWeatherMap's codes)
+    const iconMap = {
+      '01': 'sun', // clear sky
+      '02': 'partly-cloudy', // few clouds
+      '03': 'cloudy', // scattered clouds
+      '04': 'cloudy', // broken clouds
+      '09': 'rain', // shower rain
+      '10': 'rain', // rain
+      '11': 'thunderstorm', // thunderstorm
+      '13': 'snow', // snow
+      '50': 'mist' // mist
+    };
+    const code = weatherCode.substring(0, 2);
+    return iconMap[code] || 'cloudy'; // default to cloudy if unknown
+  };
+  
+  const generateWeatherWidget = (weather, location) => {
+    const icon = getWeatherIcon(weather.weather[0].icon);
+    return `
+      <div class="w-richtext" style="font-family: inherit; max-width: 100px; padding: 0; color: inherit;">
+        <div style="display: flex; align-items: top;">
+          <img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png" alt="${weather.weather[0].description}" style="width: 100px; height: 100px;">
+          </div>
+        <div style="font-size: 0.8em; text-align: center; margin-top: -15px">
+          <p>
+            <span style="font-size: 1.1em;">${Number(weather.main.temp / 10.0).toFixed(2)}°C</span><br/>
+            <em>${weather.weather[0].description}</em>
+          </p>
+        </div>
+      </div>
+    `.trim();
+  };
+
+  let geo = geoip.lookup(ip);
+
+  if (!geo || ip.startsWith('127.0.0.1') || ip.startsWith('::1')) {
+    // If geo lookup fails or IP is localhost, use the default IP
+    geo = geoip.lookup(defaultIP);
+  }
+
+  if (!geo) {
+    return res.status(400).json({
+      status: 'fail',
+      error: 'Unable to determine location from IP'
+    });
+  }
+
+  new Promise((resolve, reject) => {
+    openWeatherMap.getCurrentWeatherByGeoCoordinates(geo.ll[0], geo.ll[1], (err, weather) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(weather);
+      }
+    });
+  })
+  .then(weather => {
+    res.json({
+      status: 'ok',
+      data: {
+        location: {
+          city: geo.city,
+          country: geo.country
+        },
+        weather: {
+          description: weather.weather[0].description,
+          temperature: weather.main.temp,
+          humidity: weather.main.humidity,
+          windSpeed: weather.wind.speed
+        },
+        embed: generateWeatherWidget(weather, geo)
+      }
+    });
+  })
+  .catch(err => {
+    console.error(err);
+    res.status(500).json({
+      status: 'fail',
+      error: 'Unable to fetch weather data'
+    });
+  });
+});
+
 app.get('/users/self/location', (req, res) => {
   let locationCacheKey = 'users/self/location';
 
   const defaultLocation = {
     "id": "561e76ee498eb5ed5f9f850b",
-    "name": "SALT",
+    "name": "BK",
     "contact": {},
     "location": {
-      "address": "327 Divisadero St",
+      "address": "231 Front Street",
       "lat": 37.7726194545472,
       "lng": -122.43742447652257,
       "labeledLatLngs": [],
-      "postalCode": "94117",
+      "postalCode": "11205",
       "cc": "US",
-      "city": "San Francisco",
+      "city": "Brooklyn",
       "state": "CA",
       "country": "United States",
       "formattedAddress": []
     },
     "category": {
       "id": "4bf58dd8d48988d175941735",
-      "name": "Gym / Fitness Center",
-      "pluralName": "Gyms or Fitness Centers",
-      "shortName": "Gym / Fitness",
+      "name": "Office",
+      "pluralName": "Office",
+      "shortName": "Office",
       "icon": {
         "prefix": "https://ss3.4sqi.net/img/categories_v2/building/gym_",
         "suffix": ".png"
