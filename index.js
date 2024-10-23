@@ -57,25 +57,8 @@ app.get('/login', (req, res) => {
 app.get('/weather', (req, res) => {
   const defaultIP = '184.152.78.14'; // An IP address in New York
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const getWeatherIcon = (weatherCode) => {
-    // Map weather codes to icon names (you may need to adjust this based on OpenWeatherMap's codes)
-    const iconMap = {
-      '01': 'sun', // clear sky
-      '02': 'partly-cloudy', // few clouds
-      '03': 'cloudy', // scattered clouds
-      '04': 'cloudy', // broken clouds
-      '09': 'rain', // shower rain
-      '10': 'rain', // rain
-      '11': 'thunderstorm', // thunderstorm
-      '13': 'snow', // snow
-      '50': 'mist' // mist
-    };
-    const code = weatherCode.substring(0, 2);
-    return iconMap[code] || 'cloudy'; // default to cloudy if unknown
-  };
   
   const generateWeatherWidget = (weather, location) => {
-    const icon = getWeatherIcon(weather.weather[0].icon);
     return `
       <div class="w-richtext" style="font-family: inherit; max-width: 100px; padding: 0; color: inherit;">
         <div style="display: flex; align-items: top;">
