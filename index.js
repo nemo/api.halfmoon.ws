@@ -47,11 +47,92 @@ app.get('/users/auth/foursquare/callback', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-
   res.redirect(
     `https://foursquare.com/oauth2/authenticate?client_id=${config.foursquare.client_id}&response_type=code&redirect_uri=${config.foursquare.callback_url}`
   );
+});
 
+app.get('/users/self/art', async (req, res) => {
+  try {
+    // https://api.artic.edu/docs/#iiif-image-api
+    const request = await axios.get('https://api.artic.edu/api/v1/artworks/search', {
+      params: {
+        limit: 100,
+        query: {
+          term: {
+            artist_id: 40482
+          }
+        },
+        fields: ['description','title','artist_display','image_id']
+      }
+    });
+
+    const response = request.data || {};
+    const artworks = response.data.map(art => ({
+      ...art,
+      image_url: `${response.config.iiif_url}/${art.image_id}/full/,600/0/default.jpg`
+    }));
+
+    // Randomly pick an artwork
+    const randomArtwork = artworks[Math.floor(Math.random() * artworks.length)];
+
+    // Generate HTML string
+    const htmlString = `
+    <html>
+    <head>
+      <style>
+        body, html {
+          margin: 0;
+          padding: 0;
+          font-family: inherit;
+        }
+        .artwork-container {
+          max-width: 100%;
+          padding: 20px;
+          box-sizing: border-box;
+        }
+        .artwork-image {
+          width: auto;
+          height: auto;
+          max-height: 600px;
+          max-width: 100%;
+          display: block;
+          margin: 0 auto;
+        }
+        h2 {
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+        .artist {
+          font-style: italic;
+          margin-top: 0;
+          margin-bottom: 15px;
+        }
+        .description {
+          font-size: 14px;
+          line-height: 1.5;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="artwork-container">
+        <img src="${randomArtwork.image_url}" alt="${randomArtwork.title}" class="artwork-image">
+        <h2>${randomArtwork.title}</h2>
+        <p class="artist">${randomArtwork.artist_display}</p>
+        <p class="description">${randomArtwork.description}</p>
+      </div>
+    </body>
+    </html>
+    `;
+
+    res.send(htmlString);
+  } catch (error) {
+    console.error('Error fetching artwork:', error);
+    res.status(500).json({
+      status: 'fail',
+      error: 'Unable to fetch artwork data'
+    });
+  }
 });
 
 app.get('/weather', (req, res) => {
