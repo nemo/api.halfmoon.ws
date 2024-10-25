@@ -81,10 +81,17 @@ app.get('/users/self/art', async (req, res) => {
     <html>
     <head>
       <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&display=swap');
         body, html {
           margin: 0;
           padding: 0;
-          font-family: inherit;
+          font-family: Kanit, sans-serif;
+          height: 100%;
+        }
+        body {
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
         .artwork-container {
           max-width: 100%;
@@ -108,10 +115,6 @@ app.get('/users/self/art', async (req, res) => {
           margin-top: 0;
           margin-bottom: 15px;
         }
-        .description {
-          font-size: 14px;
-          line-height: 1.5;
-        }
       </style>
     </head>
     <body>
@@ -119,7 +122,6 @@ app.get('/users/self/art', async (req, res) => {
         <img src="${randomArtwork.image_url}" alt="${randomArtwork.title}" class="artwork-image">
         <h2>${randomArtwork.title}</h2>
         <p class="artist">${randomArtwork.artist_display}</p>
-        <p class="description">${randomArtwork.description}</p>
       </div>
     </body>
     </html>
