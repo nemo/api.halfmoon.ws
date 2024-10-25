@@ -16,6 +16,10 @@ const openWeatherMap = new OpenWeatherMap({
 const weatherCache = {};
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
+// Add this near the top of the file, after other const declarations
+const artCache = {};
+const ART_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+
 function ensurePublicAPI(req, res, next) {
   res.header("Access-Control-Allow-Origin", '*');
   res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authorization, Cookie");
@@ -54,7 +58,14 @@ app.get('/login', (req, res) => {
 
 app.get('/users/self/art', async (req, res) => {
   try {
-    // https://api.artic.edu/docs/#iiif-image-api
+    const currentTime = Date.now();
+
+    // Check if we have a cached artwork and it's still valid
+    if (artCache.artwork && (currentTime - artCache.timestamp) < ART_CACHE_DURATION) {
+      return res.send(artCache.htmlString);
+    }
+
+    // Fetch artworks from API
     const request = await axios.get('https://api.artic.edu/api/v1/artworks/search', {
       params: {
         limit: 100,
@@ -126,6 +137,11 @@ app.get('/users/self/art', async (req, res) => {
     </body>
     </html>
     `;
+
+    // Cache the artwork and HTML string
+    artCache.artwork = randomArtwork;
+    artCache.htmlString = htmlString;
+    artCache.timestamp = currentTime;
 
     res.send(htmlString);
   } catch (error) {
