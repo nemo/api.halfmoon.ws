@@ -1,22 +1,12 @@
 #!/usr/bin/env node
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const http = require('http');
-const config = require('./config')[process.env.NODE_ENV || 'development'];
-const axios = require('axios');
-const geoip = require('geoip-lite');
-const OpenWeatherMap = require('openweathermap-node');
-// Add this to your config file and replace with your actual API key
-const openWeatherMap = new OpenWeatherMap({
-  APPID: config.openWeatherMap.apiKey
-});
+import express from 'express';
+import bodyParser from 'body-parser';
+import http from 'http';
+import config from './config.mjs';
+import axios from 'axios';
+import weather from './endpoints/weather.mjs';
 
-// Add this near the top of the file, after other const declarations
-const weatherCache = {};
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
-
-// Add this near the top of the file, after other const declarations
 const artCache = {};
 const ART_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
@@ -40,7 +30,7 @@ app.use(bodyParser.json({
 app.use(ensurePublicAPI);
 
 /* Routes */
-
+weather(app);
 app.get('/users/auth/foursquare/callback', (req, res) => {
 
   res.json({
@@ -153,101 +143,6 @@ app.get('/users/self/art', async (req, res) => {
   }
 });
 
-app.get('/weather', (req, res) => {
-  const defaultIP = '184.152.78.14'; // An IP address in New York
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  
-  const generateWeatherWidget = (weather, location) => {
-    return `
-      <div class="w-richtext" style="font-family: inherit; max-width: 100px; padding: 0; color: inherit;">
-        <div style="display: flex; align-items: top;">
-          <img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png" alt="${weather.weather[0].description}" style="width: 100px; height: 100px;">
-          </div>
-        <div style="font-size: 0.8em; text-align: center; margin-top: -25px">
-          <p>
-            <span style="font-size: 1.1em;">${Number(weather.main.temp / 10.0).toFixed(2)}°C</span><br/>
-            <em>${weather.weather[0].description}</em>
-          </p>
-        </div>
-      </div>
-    `.trim();
-  };
-
-  let geo = geoip.lookup(ip);
-
-  if (!geo || ip.startsWith('127.0.0.1') || ip.startsWith('::1')) {
-    // If geo lookup fails or IP is localhost, use the default IP
-    geo = geoip.lookup(defaultIP);
-  }
-
-  if (!geo) {
-    return res.status(400).json({
-      status: 'fail',
-      error: 'Unable to determine location from IP'
-    });
-  }
-
-  // Check if we have cached data for this IP
-  if (weatherCache[ip] && (Date.now() - weatherCache[ip].timestamp) < CACHE_DURATION) {
-    if (req.query.iframe) {
-      return res.send(`<html><body>${weatherCache[ip].data.embed}</body></html>`);
-    }
-    return res.json({
-      status: 'ok',
-      data: weatherCache[ip].data,
-      cached: true
-    });
-  }
-
-  new Promise((resolve, reject) => {
-    openWeatherMap.getCurrentWeatherByGeoCoordinates(geo.ll[0], geo.ll[1], (err, weather) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(weather);
-      }
-    });
-  })
-  .then(weather => {
-    const responseData = {
-      location: {
-        city: geo.city,
-        country: geo.country
-      },
-      weather: {
-        description: weather.weather[0].description,
-        temperature: weather.main.temp,
-        humidity: weather.main.humidity,
-        windSpeed: weather.wind.speed
-      },
-      embed: generateWeatherWidget(weather, geo)
-    };
-
-    // Cache the weather data
-    weatherCache[ip] = {
-      timestamp: Date.now(),
-      data: responseData
-    };
-
-    if (req.query.iframe) {
-      res.send(`<html><body>${responseData.embed}</body></html>`)
-    } else {
-      res.json({
-        status: 'ok',
-        data: responseData,
-        cached: false
-      });
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    res.status(500).json({
-      status: 'fail',
-      error: 'Unable to fetch weather data'
-    });
-  });
-});
-
 app.get('/users/self/location', (req, res) => {
   let locationCacheKey = 'users/self/location';
 
@@ -352,4 +247,3 @@ let server = http.createServer(app, process.env.PORT || 3001);
 
 
 server.listen(port);
-module.exports = server;

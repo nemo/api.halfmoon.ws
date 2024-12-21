@@ -9,14 +9,14 @@
     "watch": "nodemon --watch ./index.js"
   },
   "engines": {
-    "node": "22.2"
+    "node": "22.11"
   },
   "dependencies": {
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "geoip-lite": "^1.4.10",
-    "nodemon": "^1.18.5",
-    "openweathermap-node": "^1.2.0"
+    "node-fetch": "^3.3.2",
+    "nodemon": "^1.18.5"
   }
 }

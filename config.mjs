@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   development: {
     origin: 'http://localhost:3000',
     foursquare: {
@@ -24,3 +24,5 @@ module.exports = {
     }
   }
 }
+
+export default config[process.env.NODE_ENV || 'development'];
