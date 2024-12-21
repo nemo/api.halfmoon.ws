@@ -185,6 +185,7 @@ export default (app) => {
         humidity: weather.current.main.humidity,
         windSpeed: weather.current.wind.speed
       },
+      forecast: weather.forecast,
       currentWidget: generateWeatherWidget(weather.current, req.query.size || 'large'),
       forecastWidget: generateThreeHourForecastWidget(weather.forecast),
     };
