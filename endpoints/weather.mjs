@@ -1,46 +1,35 @@
-import geoip from 'geoip-lite';
 import config from '../config.mjs';
 import OpenWeatherAPI from '../utils/openweather.mjs';
 
 const openWeatherMap = new OpenWeatherAPI(config.openWeatherMap.apiKey, {
-  units: 'metric', // optional: standard, metric, or imperial
-  lang: 'en'      // optional: language code
+  units: 'metric',
+  lang: 'en'
 });
 
 const weatherCache = {};
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-const getCurrentWeather = async (geo) => {
-  const [current, forecast] = await Promise.all([
-    openWeatherMap.getCurrentWeather(geo.ll[0], geo.ll[1]),
-    openWeatherMap.getForecast(geo.ll[0], geo.ll[1])
-  ]);
-  
-  return {
-    current,
-    forecast: forecast.list.slice(0, 8) // Get next 24 hours (3-hour intervals)
-  };
-};
-
 const generateWeatherWidget = (weather, size = 'large') => {
   // Base size is 100px for large
-  const baseSize = size === 'large' ? 100 : 33;
-  const fontSize = size === 'large' ? '0.8em' : '0.27em';
-  const titleSize = size === 'large' ? '1.1em' : '1.1em';
-  const marginTop = size === 'large' ? '-25px' : '-8px';
+  const baseSize = size === 'large' ? 90 : 33;
+  const iconSize = baseSize;
+  const tempSize = size === 'large' ? '5em' : '0.8em';
+  const descSize = size === 'large' ? '0.9em' : '0.3em';
 
   return `
-    <div class="w-richtext" style="font-family: inherit; max-width: ${baseSize}px; padding: 0; color: inherit;">
-      <div style="display: flex; align-items: top;">
-        <img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png" 
-             alt="${weather.weather[0].description}" 
-             style="width: ${baseSize}px; height: ${baseSize}px;">
-      </div>
-      <div style="font-size: ${fontSize}; text-align: center; margin-top: ${marginTop}">
-        <p>
-          <span style="font-size: ${titleSize};">${Number(weather.main.temp).toFixed(1)}°C</span><br/>
-          <em>${weather.weather[0].description}</em>
-        </p>
+    <div class="w-richtext" style="font-family: 'Folio Bold Condensed', sans-serif; padding: 0; color: inherit;">
+      <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 5px;">
+        <div style="font-size: ${tempSize}; line-height: 0.7; font-weight: bold; letter-spacing: -1px; margin-bottom: -5px;">
+          ${Number(weather.main.temp).toFixed(1)}°
+        </div>
+        <div style="text-align: center;">
+          <img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png" 
+               alt="${weather.weather[0].description}" 
+               style="width: ${iconSize}px; height: ${iconSize}px; display: block; margin-bottom: -15px;">
+          <div style="font-size: ${descSize}; letter-spacing: 0.5px; text-transform: uppercase; color: #666;">
+            ${weather.weather[0].description}
+          </div>
+        </div>
       </div>
     </div>
   `.trim();
@@ -127,7 +116,7 @@ const generateThreeHourForecastWidget = (forecast) => {
 
   // Generate SVG
   return `
-    <svg width="${width}" height="${height}" style="font-family: Arial, sans-serif;">
+    <svg width="${width}" height="${height}" style="font-family: 'Folio Bold Condensed', sans-serif;">
       <!-- Temperature line -->
       <polyline
         points="${points}"
@@ -149,42 +138,25 @@ const generateThreeHourForecastWidget = (forecast) => {
 
 export default (app) => {
   app.get('/weather', async (req, res) => {
-    const defaultIP = '184.152.78.14'; // An IP address in New York
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     
-    let geo = geoip.lookup(ip);
-  
-    if (!geo || ip.startsWith('127.0.0.1') || ip.startsWith('::1')) {
-      // If geo lookup fails or IP is localhost, use the default IP
-      geo = geoip.lookup(defaultIP);
-    }
-  
-    if (!geo) {
-      return res.status(400).json({
-        status: 'fail',
-        error: 'Unable to determine location from IP'
-      });
-    }
-
-    // Check if we have cached data for this IP
-    if (weatherCache[ip] && (Date.now() - weatherCache[ip].timestamp) < CACHE_DURATION) {
-      if (req.query.iframe) {
-        return res.send(`<html><body>${weatherCache[ip].data.embed}</body></html>`);
+    try {
+      // Check if we have cached data for this IP
+      if (weatherCache[ip] && (Date.now() - weatherCache[ip].timestamp) < CACHE_DURATION) {
+        if (req.query.iframe) {
+          return res.send(`<html><body>${weatherCache[ip].data.embed}</body></html>`);
+        }
+        return res.json({
+          status: 'ok',
+          data: weatherCache[ip].data,
+          cached: true
+        });
       }
-      return res.json({
-        status: 'ok',
-        data: weatherCache[ip].data,
-        cached: true
-      });
-    }
 
-    const weather = await getCurrentWeather(geo);
+      const weather = await openWeatherMap.getWeatherFromIP(ip);
   
     const responseData = {
-      location: {
-        city: geo.city,
-        country: geo.country
-      },
+      location: weather.location,
       weather: {
         description: weather.current.weather[0].description,
         temperature: weather.current.main.temp,
@@ -198,13 +170,24 @@ export default (app) => {
 
     responseData.embed = `
         <style>
+          @font-face {
+            font-family: 'Folio Bold Condensed';
+            src: url('/public/Folio-Std-Bold-Condensed.woff') format('woff');
+            font-weight: bold;
+            font-style: normal;
+          }
+          
           .weather-container {
             display: flex;
-            align-items: center;
-            gap: 20px;
+            flex-direction: column;
+            gap: 10px;
+            font-family: 'Folio Bold Condensed', sans-serif;
           }
           .current-weather {
-            flex-shrink: 0;
+            text-align: left;
+          }
+          .forecast {
+            margin-top: -20px;  /* Adjust overlap with current weather */
           }
         </style>
         <div class="weather-container">
@@ -217,19 +200,26 @@ export default (app) => {
         </div>
     `;
 
-    // Cache the weather data
-    weatherCache[ip] = {
-      timestamp: Date.now(),
-      data: responseData
-    };
+      // Cache the weather data
+      weatherCache[ip] = {
+        timestamp: Date.now(),
+        data: responseData
+      };
 
-    if (req.query.iframe) {
-      res.send(`<html><body>${responseData.embed}</body></html>`)
-    } else {
-      res.json({
-        status: 'ok',
-        data: responseData,
-        cached: false
+      if (req.query.iframe) {
+        res.send(`<html><body>${responseData.embed}</body></html>`)
+      } else {
+        res.json({
+          status: 'ok',
+          data: responseData,
+          cached: false
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching weather:', error);
+      res.status(500).json({
+        status: 'fail',
+        error: error.message || 'Unable to fetch weather data'
       });
     }
   });

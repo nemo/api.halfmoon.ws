@@ -9,6 +9,9 @@ const config = {
     },
     openWeatherMap: {
       apiKey: process.env.OPENWEATHERMAP_APIKEY
+    },
+    openai: {
+      apiKey: process.env.OPEN_AI_ACCESS_TOKEN
     }
   },
   production: {
@@ -21,6 +24,9 @@ const config = {
     },
     openWeatherMap: {
       apiKey: process.env.OPENWEATHERMAP_APIKEY
+    },
+    openai: {
+      apiKey: process.env.OPEN_AI_ACCESS_TOKEN
     }
   }
 }

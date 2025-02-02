@@ -17,6 +17,7 @@
     "express": "^4.16.4",
     "geoip-lite": "^1.4.10",
     "node-fetch": "^3.3.2",
-    "nodemon": "^1.18.5"
+    "nodemon": "^1.18.5",
+    "openai": "^4.82.0"
   }
 }

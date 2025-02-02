@@ -6,6 +6,8 @@ import http from 'http';
 import config from './config.mjs';
 import axios from 'axios';
 import weather from './endpoints/weather.mjs';
+import publicDir from './endpoints/public.mjs';
+import image from './endpoints/image.mjs';
 
 const artCache = {};
 const ART_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
@@ -31,6 +33,9 @@ app.use(ensurePublicAPI);
 
 /* Routes */
 weather(app);
+publicDir(app);
+image(app);
+
 app.get('/users/auth/foursquare/callback', (req, res) => {
 
   res.json({
