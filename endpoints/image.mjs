@@ -31,11 +31,7 @@ export default (app) => {
       const weather = await openWeatherMap.getWeatherFromIP(ip);
       
       // Construct a detailed prompt based on current weather
-      const prompt = `Abstract psychedelic interpretation of ${weather.current.weather[0].description} 
-        weather in ${weather.location.city}, temperature ${Math.round(weather.current.main.temp)}°C, 
-        with ${weather.current.humidity}% humidity and ${weather.current.wind.speed}m/s wind speed.
-        Do not show the wather itself. Do not have any text on the image. Don't show the temperature or humidity AT ALL explicitly. Absolutely NO TEXT on the image. 
-        Use colors and shapes that evoke the current weather conditions. Only use black, white, red, green, blue, yellow, orange.`;
+      const prompt = `A view of ${weather.current.weather[0].description} weather in ${weather.location.city}. Do not have any text on the image. Absolutely NO TEXT on the image. Use colors and shapes that evoke the current weather conditions. Only use black, white, red, green, blue, yellow, orange.`;
 
       const response = await openai.images.generate({
         model: "dall-e-3",

@@ -55,9 +55,9 @@ const generateThreeHourForecastWidget = (forecast) => {
   const width = 300;
   const height = 180;  
   const padding = {
-    left: 50, 
+    left: 35, // Reduced from 50 to bring y-axis closer to edge
     right: 40,
-    top: 40,
+    top: 50,
     bottom: 40
   };
   const chartWidth = width - (padding.left + padding.right);
@@ -108,7 +108,7 @@ const generateThreeHourForecastWidget = (forecast) => {
     const temp = minTemp + (tempRange * (i / 4));
     const y = height - padding.bottom - (i * chartHeight / 4);
     return `
-      <text x="${padding.left - 15}" y="${y}" text-anchor="end" alignment-baseline="middle" style="font-size: 12px;">
+      <text x="${padding.left - 5}" y="${y}" text-anchor="end" alignment-baseline="middle" style="font-size: 12px;">
         ${Math.round(temp)}°C
       </text>
     `;
@@ -207,7 +207,7 @@ export default (app) => {
       };
 
       if (req.query.iframe) {
-        res.send(`<html><body>${responseData.embed}</body></html>`)
+        res.send(`<html><body style="margin: 0; padding: 0;">${responseData.embed}</body></html>`)
       } else {
         res.json({
           status: 'ok',
