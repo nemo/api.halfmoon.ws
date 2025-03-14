@@ -22,8 +22,6 @@ export default (app) => {
       
       // Check if we have a valid cached image for this IP
       if (imageCache[ip] && (Date.now() - imageCache[ip].timestamp) < IMAGE_CACHE_DURATION) {
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
         return res.send(imageCache[ip].data);
       }
 
