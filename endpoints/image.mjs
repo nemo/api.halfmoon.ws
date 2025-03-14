@@ -12,19 +12,24 @@ const openWeatherMap = new OpenWeatherAPI(config.openWeatherMap.apiKey, {
   lang: 'en'
 });
 
-const imageCache = {};
+const imageCache = {
+  global: {
+    timestamp: 0,
+    data: null
+  }
+};
 const IMAGE_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
 export default (app) => {
   app.get('/daily-image.png', async (req, res) => {
     try {
-      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-      
-      // Check if we have a valid cached image for this IP
-      if (imageCache[ip] && (Date.now() - imageCache[ip].timestamp) < IMAGE_CACHE_DURATION) {
-        return res.send(imageCache[ip].data);
+      // Check if we have a valid cached image globally
+      if (imageCache.global.data && (Date.now() - imageCache.global.timestamp) < IMAGE_CACHE_DURATION) {
+        return res.send(imageCache.global.data);
       }
 
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      
       // Get weather data for the IP
       const weather = await openWeatherMap.getWeatherFromIP(ip);
       
@@ -49,8 +54,8 @@ export default (app) => {
         responseType: 'arraybuffer'
       });
 
-      // Cache the image data
-      imageCache[ip] = {
+      // Cache the image data globally
+      imageCache.global = {
         timestamp: Date.now(),
         data: imageResponse.data
       };
