@@ -15,24 +15,26 @@ const openWeatherMap = new OpenWeatherAPI(config.openWeatherMap.apiKey, {
 const imageCache = {
   global: {
     timestamp: 0,
-    data: null
+    data: {}
   }
 };
 const IMAGE_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
 export default (app) => {
-  app.get('/daily-image.png', async (req, res) => {
+  app.get('/daily-image/:date.png', async (req, res) => {
     try {
+      const date = req.params.date;
+
       // Check if we have a valid cached image globally
-      if (imageCache.global.data && (Date.now() - imageCache.global.timestamp) < IMAGE_CACHE_DURATION) {
-        return res.send(imageCache.global.data);
+      if (imageCache.global.data[date] && (Date.now() - imageCache.global.timestamp) < IMAGE_CACHE_DURATION) {
+        return res.send(imageCache.global.data[date]);
       }
 
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-      
+
       // Get weather data for the IP
       const weather = await openWeatherMap.getWeatherFromIP(ip);
-      
+
       // Construct a detailed prompt based on current weather
       const prompt = `A view of ${weather.current.weather[0].description} weather in ${weather.location.city}. Do not have any text on the image. Absolutely NO TEXT on the image. Use colors and shapes that evoke the current weather conditions.`;
 
