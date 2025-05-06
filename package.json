@@ -12,7 +12,7 @@
     "node": "22.11"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.2",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "geoip-lite": "^1.4.10",
