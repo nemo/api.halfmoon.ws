@@ -7,6 +7,7 @@ import crypto from "node:crypto";
 import { PNG } from "pngjs";
 import { compose as composeHtml, validate } from "./design/src/compose.mjs";
 import { quantise } from "./design/quantise.mjs";
+import { fitSlots } from "./design/src/fit.mjs";
 import { CSS } from "./design/assets.mjs";
 
 export const W = 600, H = 448;
@@ -72,6 +73,7 @@ export async function renderScreen(screen) {
     await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
     await page.setContent(html, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(fitSlots);
     const overflow = await page.$$eval(".slot", (els) =>
       els.filter((e) => e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)
         .map((e) => `${e.dataset.slot} (${e.scrollWidth}x${e.scrollHeight} in ${e.clientWidth}x${e.clientHeight})`));

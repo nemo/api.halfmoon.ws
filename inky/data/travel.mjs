@@ -57,4 +57,12 @@ export async function travelTo(event, { now } = {}) {
 }
 
 /** "Industry City, 220 36th St, Brooklyn, NY 11232, USA" -> "Industry City" */
-export const shortPlace = (where) => where.split(",")[0].trim().slice(0, 28);
+// "One Medical Group 445 Gold St, Brooklyn, NY" -> "One Medical Group".
+// Keep the venue name, drop a trailing street address; cut on a word, not mid-word.
+export const shortPlace = (where) => {
+  let s = where.split(",")[0].trim();
+  const named = s.match(/^(.*?[A-Za-z].*?)\s+\d+\s+\S.*$/);
+  if (named && named[1].length >= 3) s = named[1];
+  if (s.length <= 28) return s;
+  return s.slice(0, 28).replace(/\s+\S*$/, "");
+};
