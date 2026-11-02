@@ -3,9 +3,9 @@ import config from '../config.mjs';
 import axios from 'axios';
 import OpenWeatherAPI from '../utils/openweather.mjs';
 
-const openai = new OpenAI({
-  apiKey: config.openai.apiKey
-});
+// Created on first use so a missing key doesn't crash the whole app at boot.
+let openaiClient;
+const openai = () => (openaiClient ||= new OpenAI({ apiKey: config.openai.apiKey }));
 
 const openWeatherMap = new OpenWeatherAPI(config.openWeatherMap.apiKey, {
   units: 'metric',
@@ -38,7 +38,7 @@ export default (app) => {
       // Construct a detailed prompt based on current weather
       const prompt = `A view of ${weather.current.weather[0].description} weather in ${weather.location.city}. Do not have any text on the image. Absolutely NO TEXT on the image. Use colors and shapes that evoke the current weather conditions.`;
 
-      const response = await openai.images.generate({
+      const response = await openai().images.generate({
         model: "dall-e-3",
         prompt,
         n: 1,

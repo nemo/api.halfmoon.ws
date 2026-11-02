@@ -1,0 +1,45 @@
+/* inky-mirror design tokens.
+   The seven inks are the Inky Impression 5.7" (UC8159) SATURATED_PALETTE:
+   the colours the panel actually shows. Design only in these. Anything else
+   is quantised away by render.mjs. */
+
+@font-face {
+  font-family: "Archivo";
+  src: url("../fonts/Archivo-VF.ttf") format("truetype");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+}
+
+:root {
+  /* inks */
+  --ink: #393039;     /* black: type, rules */
+  --paper: #ffffff;   /* white: ground */
+  --red: #9c484b;     /* signal dot (mono) / the needle (green) */
+  --blue: #3d3b5e;    /* water only: rain, precipitation */
+  --yellow: #d0be47;  /* sun: small fills only, never text */
+  --green: #3a5b46;   /* action mark (green theme), done, G train */
+  --orange: #b16a49;  /* panel ink; deliberately unused */
+  /* Colour is a small functional mark, never a field. Themes live in lib.mjs. */
+
+  /* grid: 600x448, 24px margins, 12 columns of 35px with 12px gutters, 8px baseline */
+  --w: 600px;
+  --h: 448px;
+  --m: 24px;
+  --g: 12px;
+  --col: 35px;
+  --u: 8px;
+  --rule: 1px;
+  --rule-heavy: 3px;
+
+  /* type: one family, Archivo. Width axis does the work a second face would.
+     Floors for e-ink at ~1.5m: nothing under 14px, nothing under 500 weight below 20px. */
+  --f: "Archivo", sans-serif;
+  --t-small: 500 14px/16px var(--f);    /* secondary lines, units */
+  --t-body: 500 18px/24px var(--f);     /* event titles, note text */
+  --t-title: 650 24px/32px var(--f);    /* dateline, module leads */
+  --t-display: 700 44px/48px var(--f);  /* key numbers: next event, leave-by */
+  --t-hero: 750 96px/88px var(--f);     /* temperature, poster words */
+  --t-giant: 800 152px/136px var(--f);  /* poster direction only */
+  --stretch-label: 112%;                /* small text runs wider: survives quantisation */
+  --stretch-numeral: 88%;               /* big numerals run narrower */
+}

@@ -8,8 +8,10 @@ import axios from 'axios';
 import weather from './endpoints/weather.mjs';
 import publicDir from './endpoints/public.mjs';
 import image from './endpoints/image.mjs';
+import inky from './inky/routes.mjs';
 
 const artCache = {};
+const cache = {};
 const ART_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
 function ensurePublicAPI(req, res, next) {
@@ -35,6 +37,7 @@ app.use(ensurePublicAPI);
 weather(app);
 publicDir(app);
 image(app);
+inky(app);
 
 app.get('/users/auth/foursquare/callback', (req, res) => {
 
@@ -245,10 +248,11 @@ app.get('/users/self/location', (req, res) => {
 });
 
 /* Server */
-let port = parseInt(process.env.PORT, 10) || 3001;
+// On Vercel the exported app is the handler; locally (and on Heroku) we listen.
+export default app;
 
-app.set('port', port);
-let server = http.createServer(app, process.env.PORT || 3001);
-
-
-server.listen(port);
+if (!process.env.VERCEL) {
+  const port = parseInt(process.env.PORT, 10) || 3001;
+  app.set('port', port);
+  http.createServer(app).listen(port, () => console.log(`api.halfmoon.ws listening on :${port}`));
+}
